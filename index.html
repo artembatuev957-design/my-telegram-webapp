@@ -13,23 +13,29 @@
         .active { display: block; }
 
         /* Шапка */
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        #mini-avatar { width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; border: 2px solid var(--accent); }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; margin-top: 10px; }
+        #mini-avatar { width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; border: 2px solid var(--accent); transition: 0.2s; }
 
         /* Сетка приложений */
         .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
         .app { display: flex; flex-direction: column; align-items: center; cursor: pointer; text-align: center; font-size: 12px; }
         .icon { width: 60px; height: 60px; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 30px; margin-bottom: 5px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
 
-        /* Настройки и Кастомизация */
-        .section { background: var(--card); padding: 15px; border-radius: 12px; margin-bottom: 10px; }
-        .btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
-        button { border: none; padding: 10px; border-radius: 8px; background: var(--accent); color: white; cursor: pointer; flex: 1; }
-        .back-btn { background: none; color: var(--accent); font-weight: bold; text-align: left; padding: 0; margin-bottom: 20px; display: block; width: fit-content; }
+        /* Стили разделов */
+        .section { background: var(--card); padding: 15px; border-radius: 15px; margin-bottom: 15px; }
+        .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+        .circle-opt { width: 40px; height: 40px; border-radius: 50%; border: 2px solid #fff; cursor: pointer; }
+        
+        button { border: none; padding: 10px 15px; border-radius: 10px; background: var(--accent); color: white; cursor: pointer; font-weight: bold; }
+        .back-btn { background: none; color: var(--accent); font-weight: bold; margin-bottom: 15px; display: block; padding: 0; }
 
         /* Игры */
-        .game-card { background: var(--card); border-radius: 12px; padding: 15px; margin-bottom: 10px; display: flex; align-items: center; gap: 15px; cursor: pointer; }
-        canvas { background: #000; width: 100%; height: 200px; border-radius: 10px; margin-top: 10px; }
+        .game-item { background: var(--card); border-radius: 12px; padding: 15px; margin-bottom: 10px; display: flex; align-items: center; gap: 15px; }
+        #game-canvas { background: #000; width: 100%; height: 250px; border-radius: 10px; margin-top: 10px; border: 2px solid var(--accent); }
+
+        /* Аватар */
+        .avatar-preview { width: 100px; height: 100px; border-radius: 50%; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; font-size: 50px; border: 3px solid var(--accent); transition: 0.3s; }
+        .emoji-item { font-size: 30px; background: var(--card); padding: 10px; border-radius: 12px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -37,7 +43,7 @@
     <div id="scr-main" class="screen active">
         <div class="header">
             <h1 id="h-title">Смартфон</h1>
-            <div id="mini-avatar" onclick="showScreen('scr-avatar')">👨</div>
+            <div id="mini-avatar" style="background: #4cd964;">👨</div>
         </div>
         <div class="grid">
             <div class="app" onclick="showScreen('scr-weather')"><div class="icon" style="background: #ffcc00;">☀️</div><span id="m-weather">Погода</span></div>
@@ -51,16 +57,23 @@
         <button class="back-btn" onclick="showScreen('scr-main')">← Назад</button>
         <h2>Погода</h2>
         <div class="section">
-            <p>Чтобы получить прогноз в Telegram, нажмите кнопку:</p>
-            <button onclick="requestWeather()">Получить в чат</button>
+            <p>Нажмите кнопку ниже, чтобы бот прислал прогноз в чат.</p>
+            <button onclick="tg.sendData('/weather')">Узнать погоду</button>
         </div>
     </div>
 
     <div id="scr-games" class="screen">
         <button class="back-btn" onclick="showScreen('scr-main')">← Назад</button>
-        <div class="game-card" onclick="alert('Игра запускается...')"><span>🐍</span> <div><b>Змейка</b><br><small>Классика</small></div></div>
-        <div class="game-card" onclick="alert('Игра запускается...')"><span>🛸</span> <div><b>Инвейдерс</b><br><small>Космический бой</small></div></div>
-        <div class="game-card" onclick="alert('Игра запускается...')"><span>🧱</span> <div><b>Тетрис</b><br><small>Скоро будет доступно</small></div></div>
+        <div id="game-list">
+            <div class="game-item" onclick="startPlay('Snake')"><span>🐍</span> <b>Змейка</b></div>
+            <div class="game-item" onclick="startPlay('Tanks')"><span>🚜</span> <b>Танчики</b></div>
+            <div class="game-item" onclick="startPlay('Mines')"><span>💣</span> <b>Сапёр</b></div>
+        </div>
+        <div id="game-zone" style="display:none;">
+            <h3 id="cur-game-name">Игра</h3>
+            <div id="game-canvas"></div>
+            <button style="width:100%; margin-top:10px;" onclick="exitGame()">Выйти из игры</button>
+        </div>
     </div>
 
     <div id="scr-settings" class="screen">
@@ -68,33 +81,43 @@
         <div class="section">
             <h3 id="set-lang">Язык</h3>
             <div class="btn-row">
-                <button onclick="changeLang('ru')">🇷🇺 RU</button>
-                <button onclick="changeLang('en')">🇺🇸 EN</button>
-                <button onclick="changeLang('by')">🇧🇾 BY</button>
+                <button onclick="changeLang('ru')">RU</button>
+                <button onclick="changeLang('en')">EN</button>
+                <button onclick="changeLang('by')">BY</button>
             </div>
         </div>
         <div class="section">
-            <h3 id="set-theme">Фон (Тема)</h3>
+            <h3 id="set-bg">Фон системы</h3>
             <div class="btn-row">
-                <button style="background:#f0f0f2; color:#000" onclick="setTheme('light')">Светлый</button>
-                <button style="background:#1a1a1a;" onclick="setTheme('dark')">Темный</button>
+                <div class="circle-opt" style="background: #1a1a1a;" onclick="setTheme('dark')"></div>
+                <div class="circle-opt" style="background: #f0f0f2;" onclick="setTheme('light')"></div>
+                <div class="circle-opt" style="background: linear-gradient(to bottom, #1e3c72, #2a5298);" onclick="setCustomBg(this.style.background)"></div>
             </div>
         </div>
     </div>
 
     <div id="scr-avatar" class="screen">
         <button class="back-btn" onclick="showScreen('scr-main')">← Назад</button>
-        <div class="section" style="text-align: center;">
-            <div id="big-avatar" style="font-size: 80px; margin-bottom: 20px;">👨</div>
-            <div class="btn-row">
-                <button onclick="setChar('👨')">Мужчина</button>
-                <button onclick="setChar('👩')">Женщина</button>
-                <button onclick="setChar('🤖')">Робот</button>
-                <button onclick="setChar('🐱')">Кот</button>
+        <div class="avatar-preview" id="big-av" style="background: #4cd964;">👨</div>
+        
+        <div class="section">
+            <div class="btn-row" style="justify-content: center;">
+                <span class="emoji-item" onclick="setEmoji('👨')">👨</span>
+                <span class="emoji-item" onclick="setEmoji('👩')">👩</span>
+                <span class="emoji-item" onclick="setEmoji('🤖')">🤖</span>
+                <span class="emoji-item" onclick="setEmoji('🐱')">🐱</span>
             </div>
-            <br>
-            <button style="background: #4cd964; width: 100%;" onclick="saveChar()">Сохранить персонажа</button>
         </div>
+
+        <div class="section">
+            <h3 style="margin-top:0">Цвет фона</h3>
+            <div class="btn-row">
+                <div class="circle-opt" style="background:#ff5f6d" onclick="setAvBg('#ff5f6d')"></div>
+                <div class="circle-opt" style="background:#84fab0" onclick="setAvBg('#84fab0')"></div>
+                <div class="circle-opt" style="background:#a1c4fd" onclick="setAvBg('#a1c4fd')"></div>
+            </div>
+        </div>
+        <button style="width:100%" onclick="saveAv()">Сохранить</button>
     </div>
 
     <script>
@@ -106,40 +129,46 @@
             document.getElementById(id).classList.add('active');
         }
 
-        function setTheme(theme) {
-            document.body.className = theme;
+        function setTheme(t) { document.body.className = t; document.body.style.background = ""; }
+        function setCustomBg(b) { document.body.style.background = b; }
+
+        function setEmoji(e) { 
+            document.getElementById('big-av').innerText = e; 
+            document.getElementById('mini-avatar').innerText = e;
+        }
+        function setAvBg(c) { 
+            document.getElementById('big-av').style.background = c; 
+            document.getElementById('mini-avatar').style.background = c;
         }
 
-        function setChar(emoji) {
-            document.getElementById('big-avatar').innerText = emoji;
-            document.getElementById('mini-avatar').innerText = emoji;
-        }
-
-        function changeLang(lang) {
-            const dictionary = {
-                ru: { h: "Смартфон", w: "Погода", g: "Игры", s: "Настройки", c: "Персонаж", l: "Язык", th: "Фон" },
-                en: { h: "Smartphone", w: "Weather", g: "Games", s: "Settings", c: "Character", l: "Language", th: "Background" },
-                by: { h: "Смартфон", w: "Надвор'е", g: "Гульні", s: "Налады", c: "Персанаж", l: "Мова", th: "Фон" }
-            };
-            let d = dictionary[lang];
+        function changeLang(l) {
+            const d = {
+                ru: {h:"Смартфон", w:"Погода", g:"Игры", s:"Настройки", c:"Персонаж"},
+                en: {h:"Phone", w:"Weather", g:"Games", s:"Settings", c:"Character"},
+                by: {h:"Смартфон", w:"Надвор'е", g:"Гульні", s:"Налады", c:"Персанаж"}
+            }[l];
             document.getElementById('h-title').innerText = d.h;
             document.getElementById('m-weather').innerText = d.w;
             document.getElementById('m-games').innerText = d.g;
             document.getElementById('m-settings').innerText = d.s;
             document.getElementById('m-char').innerText = d.c;
-            document.getElementById('set-lang').innerText = d.l;
-            document.getElementById('set-theme').innerText = d.th;
-            // Уведомление убрано, как вы просили
         }
 
-        function requestWeather() {
-            // Вот здесь мы ПЕРВЫЙ РАЗ используем sendData, так как нам нужно закрыть окно и начать диалог с ботом
-            tg.sendData("/weather");
+        function startPlay(name) {
+            document.getElementById('game-list').style.display = 'none';
+            document.getElementById('game-zone').style.display = 'block';
+            document.getElementById('cur-game-name').innerText = name;
+            document.getElementById('game-canvas').innerHTML = `<div style="color:white; padding:20px;">Загрузка ${name}...<br>Уровень сгенерирован!</div>`;
         }
 
-        function saveChar() {
-            let currentEmoji = document.getElementById('big-avatar').innerText;
-            tg.sendData("AVATAR:" + currentEmoji);
+        function exitGame() {
+            document.getElementById('game-list').style.display = 'block';
+            document.getElementById('game-zone').style.display = 'none';
+        }
+
+        function saveAv() {
+            let e = document.getElementById('big-av').innerText;
+            tg.sendData("AVATAR:" + e);
         }
     </script>
 </body>
