@@ -12,38 +12,34 @@
         .screen { display: none; height: 100vh; width: 100%; position: absolute; top: 0; left: 0; padding: 20px; box-sizing: border-box; }
         .active { display: block; }
 
-        /* Шапка */
+        /* Header */
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        #mini-avatar { width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; border: 2px solid var(--accent); }
+        #mini-avatar { width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; border: 2px solid var(--accent); transition: 0.2s; }
 
-        /* Меню */
+        /* Grid */
         .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
         .app { display: flex; flex-direction: column; align-items: center; cursor: pointer; text-align: center; font-size: 12px; }
         .icon { width: 60px; height: 60px; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 30px; margin-bottom: 5px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
 
-        /* Кнопки */
-        button { border: none; padding: 10px 15px; border-radius: 10px; background: var(--accent); color: white; cursor: pointer; font-weight: bold; }
-        .back-btn { background: none; color: var(--accent); font-weight: bold; margin-bottom: 15px; display: block; padding: 0; }
-
-        /* ИГРОВАЯ ЗОНА */
-        #game-container { position: relative; width: 100%; max-width: 400px; margin: 0 auto; text-align: center; }
-        canvas { background: #000; border: 2px solid var(--accent); display: block; margin: 0 auto; border-radius: 8px; image-rendering: pixelated; }
-        
-        .controls { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px; width: 180px; margin-left: auto; margin-right: auto; }
-        .controls button { height: 50px; font-size: 20px; }
-
-        /* Настройки и Аватар */
+        /* Common Elements */
         .section { background: var(--card); padding: 15px; border-radius: 15px; margin-bottom: 15px; }
         .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; justify-content: center; }
         .circle-opt { width: 40px; height: 40px; border-radius: 50%; border: 2px solid #fff; cursor: pointer; }
-        .emoji-item { font-size: 30px; background: var(--card); padding: 10px; border-radius: 12px; cursor: pointer; }
+        button { border: none; padding: 10px 15px; border-radius: 10px; background: var(--accent); color: white; cursor: pointer; font-weight: bold; }
+        .back-btn { background: none; color: var(--accent); font-weight: bold; margin-bottom: 15px; display: block; padding: 0; border: none; }
+
+        /* Games */
+        canvas { background: #000; border: 2px solid var(--accent); display: block; margin: 0 auto; border-radius: 8px; }
+        .game-item { background: var(--card); padding: 15px; border-radius: 12px; margin-bottom: 10px; display: flex; align-items: center; gap: 15px; cursor: pointer; }
+        .controls { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-top: 10px; width: 150px; margin-left: auto; margin-right: auto; }
+        .emoji-btn { font-size: 30px; background: var(--card); padding: 10px; border-radius: 12px; cursor: pointer; }
     </style>
 </head>
 <body>
 
     <div id="scr-main" class="screen active">
         <div class="header">
-            <h1>Смартфон</h1>
+            <h1 id="h-title">Смартфон</h1>
             <div id="mini-avatar" style="background: #4cd964;">👨</div>
         </div>
         <div class="grid">
@@ -55,17 +51,16 @@
     </div>
 
     <div id="scr-games" class="screen">
-        <button class="back-btn" onclick="stopGame(); showScreen('scr-main');">← Назад</button>
+        <button class="back-btn" onclick="stopGame(); showScreen('scr-main')">← Назад</button>
         <div id="game-menu">
-            <button style="width:100%; margin-bottom:10px;" onclick="initSnake()">🐍 Змейка</button>
-            <button style="width:100%; margin-bottom:10px;" onclick="alert('Танчики в разработке: стены и кусты расставляются...')">🚜 Танчики</button>
-            <button style="width:100%; margin-bottom:10px;" onclick="alert('Сапер: мины закладываются...')">💣 Сапёр</button>
+            <div class="game-item" onclick="startSnake()"><span>🐍</span> <b>Змейка</b></div>
+            <div class="game-item" onclick="alert('Танчики: Генерирую кусты и стены...')"><span>🚜</span> <b>Танчики</b></div>
+            <div class="game-item" onclick="startMines()"><span>💣</span> <b>Сапер</b></div>
         </div>
-
         <div id="game-area" style="display:none;">
-            <h3 id="game-name">Игра</h3>
-            <canvas id="gameCanvas" width="300" height="300"></canvas>
-            <div class="controls" id="snake-ctrl">
+            <h3 id="game-name" style="text-align:center">Игра</h3>
+            <canvas id="gameCanvas" width="280" height="280"></canvas>
+            <div class="controls" id="ctrl-snake">
                 <div></div><button onclick="changeDir('up')">▲</button><div></div>
                 <button onclick="changeDir('left')">◀</button><button onclick="changeDir('down')">▼</button><button onclick="changeDir('right')">▶</button>
             </div>
@@ -76,23 +71,114 @@
         <button class="back-btn" onclick="showScreen('scr-main')">← Назад</button>
         <div class="section">
             <h3>Язык</h3>
-            <div class="btn-row">
-                <button onclick="alert('Язык RU')">RU</button>
-                <button onclick="alert('Язык EN')">EN</button>
-            </div>
+            <div class="btn-row"><button onclick="setLang('ru')">RU</button><button onclick="setLang('en')">EN</button></div>
         </div>
         <div class="section">
             <h3>Фон системы</h3>
             <div class="btn-row">
-                <div class="circle-opt" style="background:#1a1a1a" onclick="setBg('#1a1a1a')"></div>
-                <div class="circle-opt" style="background:#f0f0f2" onclick="setBg('#f0f0f2')"></div>
-                <div class="circle-opt" style="background:linear-gradient(#1e3c72, #2a5298)" onclick="setBg('linear-gradient(#1e3c72, #2a5298)')"></div>
+                <div class="circle-opt" style="background:#1a1a1a" onclick="setTheme('dark')"></div>
+                <div class="circle-opt" style="background:#f0f0f2" onclick="setTheme('light')"></div>
+                <div class="circle-opt" style="background:linear-gradient(#1e3c72, #2a5298)" onclick="setTheme('blue')"></div>
             </div>
         </div>
     </div>
 
     <div id="scr-avatar" class="screen">
         <button class="back-btn" onclick="showScreen('scr-main')">← Назад</button>
-        <div id="big-av" style="width:80px; height:80px; border-radius:50%; background:#4cd964; margin:0 auto 20px; display:flex; align-items:center; justify-content:center; font-size:40px; border:3px solid var(--accent);">👨</div>
+        <div id="big-av" style="width:90px; height:90px; border-radius:50%; background:#4cd964; margin:0 auto 20px; display:flex; align-items:center; justify-content:center; font-size:45px; border:3px solid var(--accent);">👨</div>
         <div class="section">
-            <div class="
+            <div class="btn-row">
+                <span class="emoji-btn" onclick="setEmoji('👨')">👨</span>
+                <span class="emoji-btn" onclick="setEmoji('👩')">👩</span>
+                <span class="emoji-btn" onclick="setEmoji('🤖')">🤖</span>
+            </div>
+        </div>
+        <div class="section">
+            <h3>Цвет фона</h3>
+            <div class="btn-row">
+                <div class="circle-opt" style="background:#ff5f6d" onclick="setAvBg('#ff5f6d')"></div>
+                <div class="circle-opt" style="background:#84fab0" onclick="setAvBg('#84fab0')"></div>
+                <div class="circle-opt" style="background:#a1c4fd" onclick="setAvBg('#a1c4fd')"></div>
+            </div>
+        </div>
+        <button style="width:100%" onclick="saveAv()">Сохранить</button>
+    </div>
+
+    <div id="scr-weather" class="screen">
+        <button class="back-btn" onclick="showScreen('scr-main')">← Назад</button>
+        <div class="section">
+            <p>Бот пришлет погоду прямо в чат.</p>
+            <button style="width:100%" onclick="tg.sendData('/weather')">Узнать погоду</button>
+        </div>
+    </div>
+
+    <script>
+        let tg = window.Telegram.WebApp;
+        tg.expand();
+
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+
+        function setTheme(t) {
+            if(t=='dark') { document.body.className = ''; document.body.style.background = "#1a1a1a"; }
+            if(t=='light') { document.body.className = 'light'; document.body.style.background = "#f0f0f2"; }
+            if(t=='blue') { document.body.style.background = "linear-gradient(#1e3c72, #2a5298)"; }
+        }
+
+        function setEmoji(e) { document.getElementById('big-av').innerText = e; }
+        function setAvBg(c) { document.getElementById('big-av').style.background = c; }
+        function saveAv() { 
+            let e = document.getElementById('big-av').innerText;
+            document.getElementById('mini-avatar').innerText = e;
+            document.getElementById('mini-avatar').style.background = document.getElementById('big-av').style.background;
+            tg.sendData("AVATAR:" + e); 
+        }
+
+        // --- GAME ENGINE ---
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        let gameLoop, snake, food, dir, box = 20;
+
+        function startSnake() {
+            showScreen('scr-games');
+            document.getElementById('game-menu').style.display='none';
+            document.getElementById('game-area').style.display='block';
+            snake = [{x:8*box, y:8*box}]; food = spawnFood(); dir = 'right';
+            gameLoop = setInterval(drawSnake, 150);
+        }
+
+        function spawnFood() { return {x:Math.floor(Math.random()*13)*box, y:Math.floor(Math.random()*13)*box}; }
+
+        function changeDir(d) {
+            if(d=='up' && dir!='down') dir='up';
+            if(d=='down' && dir!='up') dir='down';
+            if(d=='left' && dir!='right') dir='left';
+            if(d=='right' && dir!='left') dir='right';
+        }
+
+        function drawSnake() {
+            ctx.fillStyle = "#000"; ctx.fillRect(0,0,280,280);
+            ctx.fillStyle = "red"; ctx.fillRect(food.x, food.y, box, box);
+            snake.forEach((s, i) => { ctx.fillStyle = i==0?"#4cd964":"#2e7d32"; ctx.fillRect(s.x, s.y, box, box); });
+            
+            let hX = snake[0].x, hY = snake[0].y;
+            if(dir=='up') hY-=box; if(dir=='down') hY+=box; if(dir=='left') hX-=box; if(dir=='right') hX+=box;
+            
+            if(hX==food.x && hY==food.y) { food = spawnFood(); } else { snake.pop(); }
+            let newH = {x:hX, y:hY};
+            if(hX<0 || hX>=280 || hY<0 || hY>=280 || snake.some(s=>s.x==newH.x && s.y==newH.y)) {
+                alert("Конец игры!"); stopGame(); return;
+            }
+            snake.unshift(newH);
+        }
+
+        function stopGame() {
+            clearInterval(gameLoop);
+            document.getElementById('game-menu').style.display='block';
+            document.getElementById('game-area').style.display='none';
+        }
+    </script>
+</body>
+</html>
